@@ -1,3 +1,5 @@
+# app.py
+
 import streamlit as st
 import pandas as pd
 from preprocess import preprocess_text
@@ -12,8 +14,8 @@ def load_data():
     except Exception as e:
         st.error(f"Error loading data: {e}")
 
-def load_model(model_name):
-    model_path = f'models/trained_model_{model_name.replace(" ", "_")}.pkl'  # Update with your model path
+def load_model(model_type):
+    model_path = f'models/trained_model_{model_type}.pkl'  # Update with your model path
     vectorizer_path = 'models/tfidf_vectorizer.pkl'  # Update with your vectorizer path
     model = joblib.load(model_path)
     vectorizer = joblib.load(vectorizer_path)
@@ -26,23 +28,21 @@ def main():
     df = load_data()
     df['cleaned_text'] = df['Review text'].fillna("").apply(preprocess_text)
     
-    classifier_options = ['Logistic Regression', 'SVM', 'Random Forest', 'Naive Bayes', 'KNN', 'Gradient Boosting', 'Decision Tree']
-    classifier_choice = st.selectbox('Select Classifier', classifier_options)
-
-    accuracy, report = train_model(df, classifier_choice)
-    # st.write(f"{classifier_choice} Model Accuracy: {accuracy:.2f}")
-    # st.write(f"{classifier_choice} Classification Report:")
-    # st.text(report)
+    accuracy, report = train_model(df)
     
     review_text = st.text_area('Input Review Text:', height=200)
     
+    model_type = st.selectbox('Select Model Type', 
+                              ['Logistic_Regression', 'SVM', 'Random_Forest', 'Naive_Bayes', 
+                               'KNN', 'Gradient_Boosting', 'Decision_Tree'])
+    
     if st.button('Analyze Sentiment'):
         if review_text:
-            model, vectorizer = load_model(classifier_choice)
+            model, vectorizer = load_model(model_type)
             preprocessed_text = preprocess_text(review_text)
             transformed_text = vectorizer.transform([preprocessed_text])
             predicted_sentiment = model.predict(transformed_text)[0]
-            st.write(f' Ratings range 1-5 \n Predicted Sentiment: {predicted_sentiment} ratings')
+            st.write(f'Predicted Sentiment: {predicted_sentiment}')
         else:
             st.warning('Please enter a review text.')
 
